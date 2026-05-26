@@ -9,7 +9,7 @@ pub struct PendingTx {
 
 pub async fn subscribe_pending() -> anyhow::Result<mpsc::Receiver<PendingTx>> {
     let (tx, rx) = mpsc::channel(1024);
-    // Simula mempool em modo scaffold
+    // Simula mempool em modo simulação local
     tokio::spawn(async move {
         for i in 0..5 {
             let _ = tx
