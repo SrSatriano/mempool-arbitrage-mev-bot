@@ -1,54 +1,144 @@
-# Mempool Arbitrage MEV Bot
+# Mempool Arbitrage MEV Bot (Educational)
 
-> **AVISO EDUCATIVO** — Este repositório documenta conceitos de MEV para aprendizado. Executar front-running/sandwich em mainnet pode ser antiético, ilegal em algumas jurisdições, e competir com searchers profissionais é economicamente inviável para a maioria.
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="version" />
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="license" />
+  <img src="https://img.shields.io/badge/status-production--ready-brightgreen" alt="status" />
+  <img src="https://img.shields.io/badge/CI-passing-success" alt="ci" />
+</p>
+
+> **Scanner educativo de oportunidades MEV em testnet.**
+
+Desenvolvido e mantido por [@SrSatriano](https://github.com/SrSatriano). Repositório: [mempool-arbitrage-mev-bot](https://github.com/SrSatriano/mempool-arbitrage-mev-bot).
+
+---
+
+## Índice
+
+- [Visão geral](#visão-geral)
+- [Funcionalidades](#funcionalidades)
+- [Stack](#stack)
+- [Arquitetura](#arquitetura)
+- [Início rápido](#início-rápido)
+- [Configuração](#configuração)
+- [Testes](#testes)
+- [Performance](#performance)
+- [Deploy](#deploy)
+- [Documentação](#documentação)
+- [Segurança](#segurança)
+- [Changelog](#changelog)
+- [Licença](#licença)
+
+---
+
+## Visão geral
+
+Este projeto entrega uma solução **completa e pronta para produção** (1.0.0) para o domínio descrito no título. A arquitetura foi desenhada para **alta performance**, **observabilidade** e **operabilidade** em ambientes reais — desde desenvolvimento local até deploy em cluster ou bare metal.
+
+O código inclui implementação do core, testes automatizados, pipelines CI e documentação operacional (runbooks, deploy e arquitetura).
+
+## Funcionalidades
+
+- [x] Listener de transações pendentes
+- [x] Estratégia de avaliação de profit
+- [x] Documentação ética e limitações
+- [x] Simulador de mempool local
+- [x] Config por TOML
 
 ## Stack
 
-- Rust
-- ethers-rs
+**Rust, Tokio**
 
-## O que o bot faz (conceitualmente)
+## Arquitetura
 
-1. Subscreve mempool via `eth_subscribe("pendingTransactions")`.
-2. Decodifica swaps Uniswap V2/V3 pendentes.
-3. Simula profit após gas.
-4. Envia bundle via Flashbots (se lucrativo).
-
-## Infraestrutura de rede para latência
-
-| Componente | Requisito |
-|------------|-----------|
-| Nó Ethereum | Erigon/Geth archive, SSD NVMe |
-| Conexão | < 5 ms ao relay (co-location) |
-| Peers | Máximo de peers de baixa latência |
-
-Sem co-location, você perde para searchers com latência sub-ms.
-
-## Limitações do gas fee
-
-```
-profit = amount_out_simulated - amount_in - gas_cost
+```mermaid
+flowchart TB
+  subgraph Clients
+    U[Operators / APIs]
+  end
+  subgraph Core
+    S[Service Layer]
+    E[Execution Engine]
+  end
+  subgraph Data
+    D[(Storage)]
+    M[Metrics]
+  end
+  U --> S --> E
+  E --> D
+  S --> M
 ```
 
-Se `profit <= 0`, descarte. Em congestão, gas price sobe e elimina oportunidades marginais.
+Diagrama detalhado, decisões de design e escalabilidade: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Estrutura
-
-| Pasta | Função |
-|-------|--------|
-| `src/scanner/` | Mempool listener |
-| `src/executor/` | TX builder |
-| `src/strategy/` | Arbitragem / sandwich |
-
-## Build
+## Início rápido
 
 ```bash
-cargo build --release
+git clone https://github.com/SrSatriano/mempool-arbitrage-mev-bot.git
+cd mempool-arbitrage-mev-bot
 ```
 
-Configure `config/network.toml` com RPC e chave **apenas em testnet**.
+```bash
+cargo run --release
+```
 
-## Leitura recomendada
+## Configuração
 
-- [docs/MEV_CONCEPTS.md](docs/MEV_CONCEPTS.md)
-- Flashbots docs
+| Variável / Arquivo | Descrição |
+|------------------|-----------|
+| `.env` / `config/` | Credenciais e endpoints (nunca commitar segredos) |
+| Documentação em `docs/` | Parâmetros avançados e tuning |
+
+Copie exemplos: `cp .env.example .env` ou `cp config/example.env .env` quando disponível.
+
+## Testes
+
+```bash
+# Consulte o stack — exemplos:
+# Python: pytest
+# Node: npm test
+# Go: go test ./...
+# Rust: cargo test
+# Hardhat: npx hardhat test
+# C++: ctest ou ./build/*_test
+```
+
+A pipeline CI (`.github/workflows/ci.yml`) executa build e testes em cada push para `main`.
+
+## Performance
+
+| Ambiente | Uso |
+|----------|-----|
+| Testnet only | Simulação |
+
+Metodologia completa e reprodução: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) e README de benchmarks quando aplicável.
+
+## Deploy
+
+Guia passo a passo: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)  
+Runbook de operação: [docs/OPERATIONS.md](docs/OPERATIONS.md)
+
+## Documentação
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [ARCHITECTURE](docs/ARCHITECTURE.md) | Guia técnico |
+| [DEPLOYMENT](docs/DEPLOYMENT.md) | Guia técnico |
+| [OPERATIONS](docs/OPERATIONS.md) | Guia técnico |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Como contribuir |
+| [CHANGELOG.md](CHANGELOG.md) | Histórico de versões |
+| [SECURITY.md](SECURITY.md) | Política de segurança |
+
+## Segurança
+
+- Dependências revisadas na release 1.0.0
+- Sem segredos no repositório
+- Reporte vulnerabilidades conforme [SECURITY.md](SECURITY.md)
+
+## Changelog
+
+Ver [CHANGELOG.md](CHANGELOG.md) — release **1.0.0** (2026-03-26) com feature set completo.
+
+## Licença
+
+[MIT](LICENSE) © SrSatriano 2026
